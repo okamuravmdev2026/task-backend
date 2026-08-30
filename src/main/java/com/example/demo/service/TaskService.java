@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.domain.Task;
+import com.example.demo.domain.TaskPriority;
 import com.example.demo.domain.TaskStatus;
 import com.example.demo.dto.TaskRequestDto;
 import com.example.demo.dto.TaskResponseDto;
@@ -38,6 +39,8 @@ public class TaskService {
                         task.getTitle(),
                         task.getDescription(),
                         task.getStatus(),
+                        task.getPriority(),
+                        task.getDueDate(),
                         task.getCreatedAt()
                 ))
                 .toList(); // Java 16以降のスマートなリスト化
@@ -52,7 +55,15 @@ public class TaskService {
         TaskStatus status = TaskStatus.of(requestDto.status())
                 .orElse(TaskStatus.TODO); // 不正な値ならデフォルトでTODOに
 
-        Task task = new Task(requestDto.title(), requestDto.description(), status);
+        // 優先度文字列を安全にEnumに変換（なければデフォルトで「中」）
+        TaskPriority priority;
+        try {
+            priority = TaskPriority.valueOf(requestDto.priority());
+        } catch (Exception e) {
+            priority = TaskPriority.中;
+        }
+
+        Task task = new Task(requestDto.title(), requestDto.description(), status, priority, requestDto.dueDate());
         Task savedTask = taskRepository.save(task);
 
         return convertToResponseDto(savedTask);
@@ -64,6 +75,7 @@ public class TaskService {
      */
     @Transactional
     public TaskResponseDto updateTask(Long id, TaskRequestDto requestDto) {
+        
         // 【アンチパターン対策】nullを直接返したりチェックしたりせず、Optionalで例外をスロー
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("指定されたタスクが見つかりません。ID: " + id));
@@ -71,10 +83,20 @@ public class TaskService {
         TaskStatus status = TaskStatus.of(requestDto.status())
                 .orElseThrow(() -> new IllegalArgumentException("不正なステータスコードです: " + requestDto.status()));
 
+        // 優先度文字列を安全にEnumに変換（なければデフォルトで「中」）
+        TaskPriority priority;
+        try {
+            priority = TaskPriority.valueOf(requestDto.priority());
+        } catch (Exception e) {
+            priority = TaskPriority.中;
+        }
+
         // エンティティの状態を更新
         task.setTitle(requestDto.title());
         task.setDescription(requestDto.description());
         task.setStatus(status);
+        task.setPriority(priority);
+        task.setDueDate(requestDto.dueDate());
 
         // ダーティチェッキング（自動更新確認）により、saveを呼ばずともコミット時にDB更新されます
         return convertToResponseDto(task);
@@ -100,6 +122,8 @@ public class TaskService {
                 task.getTitle(),
                 task.getDescription(),
                 task.getStatus(),
+                task.getPriority(),
+                task.getDueDate(),
                 task.getCreatedAt()
         );
     }

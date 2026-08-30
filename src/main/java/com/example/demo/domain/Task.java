@@ -36,6 +36,13 @@ public class Task {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TaskPriority priority = TaskPriority.中; // デフォルトは「中」
+
+    @Column(length = 10)
+    private String dueDate; // "2026-08-31" などの文字列でフロントから受け取る
+
     /**
      * 【Java機能アピール】エンティティ永続化前の自動処理（フックメソッド）
      * 登録時にシステム日時を自動でセットします。
@@ -48,10 +55,12 @@ public class Task {
     // --- コンストラクタ ---
     public Task() {}
 
-    public Task(String title, String description, TaskStatus status) {
+    public Task(String title, String description, TaskStatus status, TaskPriority priority, String dueDate) {
         this.title = title;
         this.description = description;
         this.status = status;
+        this.priority = priority;
+        this.dueDate = dueDate;
     }
 
     // --- ゲッター / セッター（実務標準のカプセル化） ---
@@ -68,4 +77,10 @@ public class Task {
     public void setStatus(TaskStatus status) { this.status = status; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
+
+    public TaskPriority getPriority() { return priority; }
+    public void setPriority(TaskPriority priority) { this.priority = priority; }
+
+    public String getDueDate() { return dueDate; }
+    public void setDueDate(String dueDate) { this.dueDate = dueDate; }
 }

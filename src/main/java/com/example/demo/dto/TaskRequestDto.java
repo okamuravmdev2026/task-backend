@@ -17,6 +17,9 @@ public record TaskRequestDto(
     String description,
 
     @NotBlank(message = "ステータスは必須入力です")
-    String status
+    String status,
+
+    String priority,
+    String dueDate
 ) {
 }

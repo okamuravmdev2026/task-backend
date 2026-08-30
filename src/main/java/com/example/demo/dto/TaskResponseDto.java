@@ -2,6 +2,7 @@ package com.example.demo.dto;
 
 import java.time.LocalDateTime;
 
+import com.example.demo.domain.TaskPriority;
 import com.example.demo.domain.TaskStatus;
 
 /**
@@ -13,6 +14,8 @@ public record TaskResponseDto(
     String title,
     String description,
     TaskStatus status,
+    TaskPriority priority,
+    String dueDate,
     LocalDateTime createdAt
 ) {
     // ゲッターやコンストラクタはJavaが自動生成するため、コードが非常にスッキリします

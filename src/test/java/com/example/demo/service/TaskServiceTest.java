@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.demo.domain.Task;
+import com.example.demo.domain.TaskPriority;
 import com.example.demo.domain.TaskStatus;
 import com.example.demo.dto.TaskRequestDto;
 import com.example.demo.dto.TaskResponseDto;
@@ -36,10 +37,10 @@ class TaskServiceTest {
     void testUpdateTask_Success() {
         // 1. 準備 (Given)
         Long taskId = 1L;
-        Task existingTask = new Task("古いタイトル", "古い説明", TaskStatus.TODO);
+        Task existingTask = new Task("古いタイトル", "古い説明", TaskStatus.TODO, TaskPriority.中, null);
         existingTask.setId(taskId);
         
-        TaskRequestDto requestDto = new TaskRequestDto("新しいタイトル", "新しい説明", "DOING");
+        TaskRequestDto requestDto = new TaskRequestDto("新しいタイトル", "新しい説明", "DOING", "高", "2026-08-31");
 
         // リポジトリの挙動をモック化（DBにアクセスせず、事前に用意したOptionalを返す）
         when(taskRepository.findById(taskId)).thenReturn(Optional.of(existingTask));
@@ -62,7 +63,7 @@ class TaskServiceTest {
     void testUpdateTask_NotFound() {
         // 1. 準備 (Given)
         Long nonExistentId = 999L;
-        TaskRequestDto requestDto = new TaskRequestDto("タイトル", "説明", "TODO");
+        TaskRequestDto requestDto = new TaskRequestDto("タイトル", "説明", "TODO", "中", "");
 
         // リポジトリが空のOptionalを返す（データが見つからない状態をシミュレート）
         when(taskRepository.findById(nonExistentId)).thenReturn(Optional.empty());
