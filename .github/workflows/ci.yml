@@ -18,16 +18,13 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         
-    - name: Cache Gradle packages
-      uses: actions/cache@v4
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
       with:
-        path: ~/.gradle/caches
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
+        gradle-version: '8.8' # ★最新の9系によるエラーを回避するため、安定版の8.8を明示的に指定
         
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
       
     - name: Build and Test with Gradle
-      run: ./gradlew build
+      run: ./gradlew build --no-daemon
