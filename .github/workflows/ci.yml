@@ -20,9 +20,9 @@ jobs:
         
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
-      with:
-        gradle-version: '8.8' # ★最新の9系によるエラーを回避するため、安定版の8.8を明示的に指定
-        
+      # 補足: gradle-versionの行をあえて削除することで、
+      # 上記で直した gradle-wrapper.properties (8.8) を自動で最優先して使うようになります。
+
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
       
