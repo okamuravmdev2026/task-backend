@@ -40,3 +40,16 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+// ⭕ JUnitテスト実行時のみ、外部ファイルに頼らず、このH2設定をメモリ上に強制注入します
+test {
+    useJUnitPlatform()
+    
+    // Spring Boot 3.x の起動に必要な最低限のH2データソース情報を直接定義
+    systemProperty 'spring.datasource.url', 'jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1'
+    systemProperty 'spring.datasource.username', 'sa'
+    systemProperty 'spring.datasource.password', ''
+    systemProperty 'spring.datasource.driver-class-name', 'com.h2database.h2.Driver'
+    systemProperty 'spring.jpa.hibernate.ddl-auto', 'create-drop'
+    systemProperty 'spring.jpa.show-sql', 'true'
+}
