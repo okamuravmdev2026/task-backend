@@ -28,3 +28,8 @@ jobs:
       
     - name: Build and Test with Gradle
       run: ./gradlew build --no-daemon
+      # ★環境変数を注入（application.propertiesが無くても、Springがこの値を自動で最優先して読み込みます）
+      env:
+        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/postgres
+        SPRING_DATASOURCE_USERNAME: postgres
+        SPRING_DATASOURCE_PASSWORD: password123 # CI上のコンテナ用ダミーパスワード
