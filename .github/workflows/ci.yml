@@ -27,4 +27,4 @@ jobs:
       run: chmod +x gradlew
       
     - name: Build and Test with Gradle
-      run: ./gradlew build --no-daemon
+      run: ./gradlew build --no-daemon -Dspring.profiles.active=test

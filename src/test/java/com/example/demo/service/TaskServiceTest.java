@@ -37,12 +37,14 @@ class TaskServiceTest {
     void testUpdateTask_Success() {
         // 1. 準備 (Given)
         Long taskId = 1L;
+        // 🛠️ 既存のタスクの優先度を「中」に設定
         Task existingTask = new Task("古いタイトル", "古い説明", TaskStatus.TODO, TaskPriority.中, null);
         existingTask.setId(taskId);
         
-        TaskRequestDto requestDto = new TaskRequestDto("新しいタイトル", "新しい説明", "DOING", "高", "2026-08-31");
+        // 🛠️ リクエストの優先度も「中」に合わせて指定し、valueOf のフォールバックに依存しない安全な通信にします
+        TaskRequestDto requestDto = new TaskRequestDto("新しいタイトル", "新しい説明", "DOING", "中", "2026-08-31");
 
-        // リポジトリの挙動をモック化（DBにアクセスせず、事前に用意したOptionalを返す）
+        // リポジトリの挙動をモック化
         when(taskRepository.findById(taskId)).thenReturn(Optional.of(existingTask));
 
         // 2. 実行 (When)
@@ -53,8 +55,9 @@ class TaskServiceTest {
         assertEquals("新しいタイトル", responseDto.title());
         assertEquals("新しい説明", responseDto.description());
         assertEquals(TaskStatus.DOING, responseDto.status());
+        // 🛠️ レスポンスの優先度が「中」であることを明確にアサーション
+        assertEquals(TaskPriority.中, responseDto.priority());
         
-        // 確実にfindByIdが1回呼ばれたことを検証
         verify(taskRepository, times(1)).findById(taskId);
     }
 

@@ -6,5 +6,7 @@ build/
 .bin/
 .idea/
 *.iml
-/main/
+# 機密情報が含まれる設定ファイルを完全に除外
+src/main/resources/application.properties
 /test/
+/main/

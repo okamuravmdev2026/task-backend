@@ -18,16 +18,18 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         
-    - name: Cache Gradle packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.gradle/caches
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-        
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+      # 補足: gradle-versionの行をあえて削除することで、
+      # 上記で直した gradle-wrapper.properties (8.8) を自動で最優先して使うようになります。
+
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
       
     - name: Build and Test with Gradle
-      run: ./gradlew build
+      run: ./gradlew build --no-daemon
+      # ★環境変数を注入（application.propertiesが無くても、Springがこの値を自動で最優先して読み込みます）
+      env:
+        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/postgres
+        SPRING_DATASOURCE_USERNAME: postgres
+        SPRING_DATASOURCE_PASSWORD: password123 # CI上のコンテナ用ダミーパスワード

@@ -25,11 +25,16 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-aop' // AOPもこれで100%解決します
 	
-	runtimeOnly 'com.h2database:h2'
-	
+	//runtimeOnly 'com.h2database:h2'
+	// PostgreSQL用のドライバを追加
+	runtimeOnly 'org.postgresql:postgresql'
+
 	// テスト用の正しいスターター（これ1つでJUnitもMockitoもすべて入ります）
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// H2を「テストの実行時のみ」利用する設定として追加
+    testRuntimeOnly 'com.h2database:h2'
 }
 
 tasks.named('test') {
