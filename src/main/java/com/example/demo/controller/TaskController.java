@@ -26,7 +26,9 @@ import com.example.demo.service.TaskService;
  */
 @RestController
 @RequestMapping("/api/tasks")
-@CrossOrigin(origins = "http://localhost:5173") // Vue.jsのデフォルト開発ポートからのアクセスを許可
+//@CrossOrigin(origins = "http://localhost:5173") // Vue.jsのデフォルト開発ポートからのアクセスを許可
+//@CrossOrigin(origins = "http://task-frontend-vue-okamu.s3-website-ap-northeast-1.amazonaws.com")
+@CrossOrigin(origins = "https://d2td4ep83ibsl5.cloudfront.net")
 public class TaskController {
 
     private final TaskService taskService;
