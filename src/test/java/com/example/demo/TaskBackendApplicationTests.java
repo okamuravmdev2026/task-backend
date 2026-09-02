@@ -2,6 +2,9 @@ package com.example.demo;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+
+import com.example.demo.repository.TaskRepository;
 
 /**
  * アプリケーションのコンテキスト起動テストです。
@@ -14,6 +17,9 @@ import org.springframework.boot.test.context.SpringBootTest;
     "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration"
 })
 class TaskBackendApplicationTests {
+
+    @MockBean
+    private TaskRepository taskRepository;
 
     @Test
     void contextLoads() {
