@@ -21,7 +21,7 @@
 </table>
 
 - **本番環境（AWS / フルクラウド公開中）**: `https://d2td4ep83ibsl5.cloudfront.net`
-- **本番環境（GCP / フルクラウド公開中）**: `http://8.231.131.233`
+- **本番環境（GCP / フルクラウド公開中）**: `https://okamu-task.duckdns.org`
 
 ---
 
@@ -77,10 +77,10 @@ graph TD
     classDef gcp fill:#e8f5e9,stroke:#4caf50,stroke-width:2px;
     classDef vm fill:#ffffff,stroke:#333,stroke-width:1px;
 
-    User([ユーザー / ブラウザ]):::internet
+    User([ユーザー / Browser]):::internet
 
     subgraph GCE [GCP Compute Engine / e2-micro 永年無料インスタンス]
-        Nginx[Nginx Webサーバー / リバースプロキシ<br>Port: 80 単一窓口]
+        Nginx[Nginx Webサーバー / リバースプロキシ<br>🌟Port: 443 / Let's Encrypt常時SSL化]
         
         subgraph Same_Origin [同一オリジン / 内部空間]
             React[React 19 静的ファイル配信<br>/ 階層]
@@ -90,10 +90,11 @@ graph TD
     end
 
     %% 通信経路
-    User -->|すべてのアクセスを受信 Port: 80| Nginx
+    User -->|① HTTP自動リダイレクト Port: 80| Nginx
+    User -->|② 🔒完全暗号化通信 Port: 443| Nginx
     
-    Nginx -->|① フロント配信| React
-    Nginx -->|② 同一オリジン内部転送| Java
+    Nginx -->|フロント配信| React
+    Nginx -->|同一オリジン内部転送| Java
     Java -->|ローカル通信 Port: 5432| Docker
 
     class GCE gcp;
@@ -112,10 +113,11 @@ graph TD
   - **Nginx**: リバースプロキシとして導入。CloudFrontからの通信（ポート80）を受信し、Java（ポート8080）へ安全に仲介。
   - **Amazon VPC**: サブネット隔離、セキュリティグループによるIP直指定を排除した「グループ間連携ファイアウォール」の設計。
 - **GCP環境**
-  - **Google Compute Engine (GCE / e2-micro)**: 永年無料枠（Always Free）のVMインスタンス。Ubuntu 22.04 LTS環境を構築し、システム全体のホストサーバーとして運用。
-  - **Docker / Docker Volume**: マネージドDBの課金を完全回避するための0円コンテナ運用。PostgreSQL 16コンテナを起立させ、データ永続化用の独立ボリューム（`postgres_data`）をバインドマウント。
-  - **Nginx (GCP Web Server / Reverse Proxy)**: ポート80で全アクセスを受信する「単一窓口」として機能。同一サーバー内でReactの静的配信とJava（ポート8080）への内部転送を一括制御し、CORSの概念を根本から消滅させるリバースプロキシを設計。
-  - **VPC ネットワーク (GCP Network)**: 静的外部IPアドレスの割り当て、およびブラウザSSHやHTTP通信に必要なインバウンドポート（22/80/8080）のみを厳格に制限するファイアウォールルールの設計。
+  - **Google Compute Engine (GCE)**: 永年無料枠（Always Free）のVMインスタンス。Ubuntu 22.04 LTS環境を展開し、ホストサーバーとして運用。
+  - **Docker / Docker Volume**: マネージドDB（Cloud SQL）の課金を完全回避するための0円コンテナ運用。PostgreSQL 16コンテナを起立させ、データ永続化用の独立ボリューム（`postgres_data`）をバインドマウント。
+  - **Let's Encrypt / Certbot**: 独自ドメイン未取得の制約を解決する無料のSSL/TLS証明書。バックグラウンドでの自動更新タスク（Cron）までインフラレベルでスケジューリング運用。
+  - **Nginx (GCP Web Server / Reverse Proxy)**: ポート80/443を受信する単一窓口。HTTPアクセスをHTTPSへ強制リダイレクトするセキュリティ制御、および同一サーバー内へのリバースプロキシルーティング（CORS消滅）を一括制御。
+  - **VPC ネットワーク**: パブリック静的外部IPの固定、およびIAP（ブラウザSSH）や完全暗号化通信に必要なインバウンドポート（22/80/443/8080）のみを厳格に制限するファイアウォールルールの設計。
 
 ### フロントエンド（マルチフロントエンド接続実証）
 - **Vue 3** (Composition API, `<script setup>` 構文) / **Vuetify 3** ➔ AWS環境へ配備
@@ -150,12 +152,12 @@ CloudFrontをAPIサーバーの前段に置いた際に発生する「CORS通信
 Java（Spring Boot）側のコントローラー層（`TaskController.java`）において、開発初期に使われがちな `origins = "*"` というワイルドカードによる全開放（アンチパターン）を徹底排除。本番環境であるフロントエンド用CloudFrontのドメインのみを明示的に指定した**ホワイトリスト方式（正攻法）**を採用し、CSRF（クロスサイトリクエストフォージェリ）等の脆弱性を防いでいます。
 
 ### 4. インフラコストを0円に抑える「GCP永年無料枠×Docker同居」設計（★GCPアピール）
-GCPのマネージドDB（Cloud SQL）に無料枠が存在しない制約に対し、Compute Engine（e2-micro）の永年無料枠（Always Free）のディスク空間（30GB）を活用。VM内部に **DockerコンテナでPostgreSQL 16を起立** させ、ボリューム（`postgres_data`）をバインドマウントすることで、完全無料でデータを安全に保持（永続化）するコスト最適化アーキテクチャを実証しました。また、OS（Ubuntu 22.04 jammy）へのDocker公式リポジトリの導入から、環境に合わせたビルド・デプロイまでをコンソールから一気通貫で完結させています。
+GCPのマネージドDB（Cloud SQL）に無料枠が存在しない制約に対し、Compute Engine（e2-micro）の永年無料枠（Always Free）のディスク空間（30GB）を活用。VM内部に **DockerコンテナでPostgreSQL 16を起立** させ、ボリューム（`postgres_data`）をバインドマウントすることで、完全無料でデータを安全に保持（永続化）するコスト最適化アーキテクチャを実証しました。
+さらに、商用標準の常時SSL（HTTPS）化についても、無料ダイナミックDNS（Duck DNS）と **Let's Encrypt (Certbot)** を組み合わせ、1円の追加費用も発生させない「0円常時SSL暗号化ライン」を完全構築しています。
 
 ### 5. Nginxリバースプロキシによる「CORS（クロスオリジン）の根本消滅」
-GCP環境（React版）においては、Nginxを全通信のフロントドア（単一窓口）として配置。
-`/` へのアクセスでReactのビルド静的ファイルを配信し、`/api/` へのアクセスを同じサーバー内で待ち受けるJava（8080）へ内部転送する設計を採用しました。
-ブラウザから見ると「画面の読み込み先」と「APIの叩き先」が完全に同一のIPアドレス・同一ポート（ポート80）の**「同一オリジン（Same-Origin）」**になるため、アプリケーション層での複雑なCORS許可設定やプリフライト（OPTIONS）通信のオーバーヘッドそのものを根本から100%排除した、堅牢でクリーンなネットワークラインを構築しています。
+GCP環境（React版）においては、Nginxを全通信のフロントドア（単一窓口）として配置。ポート80（HTTP）へのアクセスは安全な443（HTTPS）へと強制リダイレクトさせ、ポート443のSSL暗号化空間において、`/` へのアクセスでReactのビルド静的ファイルを配信、`/api/` へのアクセスを同じサーバー内で待ち受けるJava（8080）へ内部転送する設計を採用しました。
+ブラウザから見ると「画面の読み込み先」と「APIの叩き先」が完全に同一のドメイン・同一ポート（ポート443）の**「同一オリジン（Same-Origin）」**になるため、アプリケーション層での複雑なCORS許可設定やプリフライト（OPTIONS）通信のオーバーヘッドそのものを根本から100%排除した、堅牢でクリーンな常時暗号化ネットワークラインを構築しています。
 
 ### 6. フロントエンド：スマート・ダムコンポーネント設計とUI/UX最適化
 画面の肥大化・結合度を抑えるため、状態管理を行う「親（スマート）」とUI表示に特化した「子（ダム）」の役割を明確に分離。
